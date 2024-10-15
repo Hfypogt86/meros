@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مسابقة وعجلة الحظ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #registration-form {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #wheel {
+            margin: 20px auto;
+            width: 300px;
+            height: 300px;
+            position: relative;
+            display: none;
+        }
+        #winner {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: #d9534f;
+        }
+        #participant-list {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .participant {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .remove-button {
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>مسابقة وعجلة الحظ</h1>
+
+<div id="registration-form">
+    <input type="text" id="name" placeholder="أدخل اسمك" required>
+    <button id="register-button">سجل الآن</button>
+</div>
+
+<div id="wheel">
+    <canvas id="wheelCanvas" width="300" height="300"></canvas>
+</div>
+
+<button id="spin-button" style="display:none;">دور العجلة</button>
+<div id="winner" style="display:none;"></div>
+
+<div id="participant-list" style="display:none;">
+    <h2>المشاركون</h2>
+    <div id="participants"></div>
+</div>
+
+<script>
+    const participants = [];
+    const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A8', '#A833FF', '#33FFF7'];
+
+    document.getElementById('register-button').onclick = function() {
+        const name = document.getElementById('name').value.trim();
+        if (name) {
+            const color = colors[participants.length % colors.length]; // تعيين لون لكل شخص
+            participants.push({ name, color });
+            document.getElementById('name').value = '';
+            alert("تم تسجيلك: " + name);
+            drawWheel();
+            updateParticipantList();
+        } else {
+            alert("يرجى إدخال اسمك.");
+        }
+
+        if (participants.length > 0) {
+            document.getElementById('wheel').style.display = 'block';
+            document.getElementById('spin-button').style.display = 'block';
+            document.getElementById('participant-list').style.display = 'block';
+        }
+    };
+
+    function drawWheel() {
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const arcSize = (2 * Math.PI) / participants.length;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // مسح الرسم السابق
+
+        for (let i = 0; i < participants.length; i++) {
+            ctx.beginPath();
+            ctx.moveTo(150, 150);
+            ctx.arc(150, 150, 150, i * arcSize, (i + 1) * arcSize);
+            ctx.fillStyle = participants[i].color;
+            ctx.fill();
+            ctx.stroke();
+            ctx.save();
+            ctx.translate(150, 150);
+            ctx.rotate((i + 0.5) * arcSize);
+            ctx.fillStyle = '#fff';
+            ctx.fillText(participants[i].name, 50, 10);
+            ctx.restore();
+        }
+    }
+
+    function updateParticipantList() {
+        const participantsDiv = document.getElementById('participants');
+        participantsDiv.innerHTML = ''; // مسح القائمة السابقة
+
+        participants.forEach((participant, index) => {
+            const participantDiv = document.createElement('div');
+            participantDiv.className = 'participant';
+            participantDiv.innerHTML = `
+                <span>${participant.name}</span>
+                <button class="remove-button" onclick="removeParticipant(${index})">حذف</button>
+            `;
+            participantsDiv.appendChild(participantDiv);
+        });
+    }
+
+    function removeParticipant(index) {
+        participants.splice(index, 1); // حذف الشخص من المصفوفة
+        alert("تم حذف: " + participants[index].name);
+        drawWheel();
+        updateParticipantList();
+    }
+
+    document.getElementById('spin-button').onclick = function() {
+        const spins = Math.floor(Math.random() * 10 + 5) * 360; // عدد الدورات
+        const wheel = document.getElementById('wheelCanvas');
+        wheel.style.transition = 'transform 4s ease-out';
+        wheel.style.transform = 'rotate(' + spins + 'deg)';
+
+        setTimeout(function() {
+            const winnerIndex = Math.floor(Math.random() * participants.length);
+            const winnerName = participants[winnerIndex].name;
+            document.getElementById('winner').innerText = "الفائز هو: " + winnerName;
+            document.getElementById('winner').style.display = 'block';
+        }, 4000); // بعد انتهاء الدوران
+    };
+</script>
+
+</body>
+</html>
+
